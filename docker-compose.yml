@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: iot-safety-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: iot_safety_db
+      MYSQL_USER: root_base
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - iot-safety-network
+
+volumes:
+  mysql_data:
+
+networks:
+  iot-safety-network:
+    driver: bridge
