@@ -37,6 +37,10 @@ public enum ErrorCode {
     UNAUTHORIZED(10403, HttpStatus.FORBIDDEN, "You do not have permission"),
     UNAUTHENTICATED(10404, HttpStatus.UNAUTHORIZED, "Unauthenticated"),
     ACCESS_DENIED(10405, HttpStatus.FORBIDDEN, "Access denied"),
+    INVALID_CREDENTIALS(10406, HttpStatus.UNAUTHORIZED, "Invalid phone number or password"),
+    ACCOUNT_LOCKED(10407, HttpStatus.FORBIDDEN, "Account is locked"),
+    ACCOUNT_INACTIVE(10408, HttpStatus.FORBIDDEN, "Account is inactive"),
+    PHONE_NOT_VERIFIED(10409, HttpStatus.FORBIDDEN, "Phone number must be verified before login"),
 
     // Review-related errors
     REVIEW_NOT_FOUND(10500, HttpStatus.NOT_FOUND, "Review with ID '{}' not found"),

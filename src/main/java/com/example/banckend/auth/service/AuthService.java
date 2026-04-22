@@ -1,8 +1,11 @@
 package com.example.banckend.auth.service;
 
+import com.example.banckend.auth.dto.request.LoginRequest;
 import com.example.banckend.auth.dto.request.RegisterRequest;
 import com.example.banckend.auth.dto.request.VerifyOtpRequest;
+import com.example.banckend.auth.dto.response.LoginResponse;
 import com.example.banckend.auth.dto.response.RegisterResponse;
+import com.example.banckend.auth.dto.response.UserSummaryResponse;
 import com.example.banckend.auth.dto.response.VerifyOtpResponse;
 import com.example.banckend.auth.entity.OtpVerification;
 import com.example.banckend.auth.entity.User;
@@ -30,6 +33,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final OtpVerificationRepository otpVerificationRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     private static final int OTP_LENGTH = 6;
     private static final int OTP_VALIDITY_MINUTES = 5;
@@ -62,7 +66,7 @@ public class AuthService {
         OtpVerification otpVerification = OtpVerification.builder()
                 .phoneNumber(request.getPhoneNumber())
                 .otpCode(otpCode)
-                .purpose(OtpPurpose.SIGN_UP)
+                .purpose(OtpPurpose.REGISTER)
                 .expiredAt(expiredAt)
                 .verified(false)
                 .build();
@@ -87,8 +91,8 @@ public class AuthService {
     public VerifyOtpResponse verifyOtp(VerifyOtpRequest request) {
         // Find latest OTP for phone number with given purpose and not verified
         Optional<OtpVerification> otpOpt = otpVerificationRepository
-                .findTopByPhoneNumberAndPurposeAndVerifiedFalseOrderByCreatedAtDesc(
-                        request.getPhoneNumber(), 
+                .findTopByPhoneNumberAndPurposeOrderByCreatedAtDesc(
+                        request.getPhoneNumber(),
                         request.getPurpose());
 
         if (otpOpt.isEmpty()) {
@@ -112,7 +116,7 @@ public class AuthService {
         otpVerificationRepository.save(otp);
 
         // If purpose is SIGN_UP, mark user's phone as verified
-        if (request.getPurpose() == OtpPurpose.SIGN_UP) {
+        if (request.getPurpose() == OtpPurpose.REGISTER) {
             User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getPhoneNumber()));
             user.setPhoneVerified(true);
@@ -125,6 +129,53 @@ public class AuthService {
                 .purpose(request.getPurpose())
                 .phoneVerified(true)
                 .build();
+    }
+    /// CHức  năng đăng nhập
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        // Find user by phone number
+        User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
+
+        // Check account status
+        if (user.getStatus() == UserStatus.LOCKED) {
+            throw new CustomException(ErrorCode.ACCOUNT_LOCKED);
+        }
+        if (user.getStatus() == UserStatus.INACTIVE) {
+            throw new CustomException(ErrorCode.ACCOUNT_INACTIVE);
+        }
+
+        // Check phone verification if required
+        if (!user.getPhoneVerified()) {
+            throw new CustomException(ErrorCode.PHONE_NOT_VERIFIED);
+        }
+
+        // Verify password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // Generate tokens
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        // Build user summary
+        UserSummaryResponse userSummary = UserSummaryResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber())
+                .phoneVerified(user.getPhoneVerified())
+                .build();
+
+        // Build login response
+        LoginResponse response = LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType("Bearer")
+                .user(userSummary)
+                .build();
+
+        return response;
     }
 
     private String generateOtpCode() {

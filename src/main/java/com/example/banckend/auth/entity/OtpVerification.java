@@ -31,7 +31,7 @@ public class OtpVerification extends BaseEntity {
     private String otpCode;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(name = "purpose", nullable = false, length = 30)
     private OtpPurpose purpose;
 
     @Column(nullable = false)
