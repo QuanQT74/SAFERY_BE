@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface OtpVerificationRepository extends JpaRepository<OtpVerification, Long> {
     boolean existsByPhoneNumberAndVerifiedFalse(String phoneNumber);
-    Optional<OtpVerification> findTopByPhoneNumberAndPurposeAndVerifiedFalseOrderByCreatedAtDesc(
+    Optional<OtpVerification> findTopByPhoneNumberAndPurposeOrderByCreatedAtDesc(
             String phoneNumber, 
             OtpPurpose purpose);
 }
