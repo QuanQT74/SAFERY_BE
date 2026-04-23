@@ -1,5 +1,7 @@
 package com.example.banckend.auth.entity;
 
+import java.time.LocalDateTime;
+
 import com.example.banckend.conmon.entity.BaseEntity;
 import com.example.banckend.conmon.enums.UserStatus;
 import com.example.banckend.profile.entity.NotificationSettings;
@@ -25,7 +27,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class User extends BaseEntity {
 
-
     @Column(nullable = false, length = 150)
     private String fullName;
 
@@ -36,11 +37,19 @@ public class User extends BaseEntity {
     private String passwordHash;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean phoneVerified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer failedLoginAttempts = 0;
+
+    private LocalDateTime lockedUntil;
 
     @OneToOne(mappedBy = "user")
     private NotificationSettings notificationSettings;
