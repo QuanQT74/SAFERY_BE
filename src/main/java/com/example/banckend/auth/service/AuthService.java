@@ -1,8 +1,10 @@
 package com.example.banckend.auth.service;
 
+import com.example.banckend.auth.dto.request.ForgotPasswordRequest;
 import com.example.banckend.auth.dto.request.LoginRequest;
 import com.example.banckend.auth.dto.request.RegisterRequest;
 import com.example.banckend.auth.dto.request.VerifyOtpRequest;
+import com.example.banckend.auth.dto.response.ForgotPasswordResponse;
 import com.example.banckend.auth.dto.response.LoginResponse;
 import com.example.banckend.auth.dto.response.RegisterResponse;
 import com.example.banckend.auth.dto.response.UserSummaryResponse;
@@ -17,6 +19,8 @@ import com.example.banckend.conmon.exception.CustomException;
 import com.example.banckend.conmon.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +38,7 @@ public class AuthService {
     private final OtpVerificationRepository otpVerificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AccountLockService accountLockService;
 
     private static final int OTP_LENGTH = 6;
     private static final int OTP_VALIDITY_MINUTES = 5;
@@ -57,6 +62,7 @@ public class AuthService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .phoneVerified(false)
                 .status(UserStatus.ACTIVE)
+                .failedLoginAttempts(0)
                 .build();
 
         // Generate OTP
@@ -130,14 +136,20 @@ public class AuthService {
                 .phoneVerified(true)
                 .build();
     }
-    /// CHức  năng đăng nhập
+    /// CHức năng đăng nhập
+
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        // Find user by phone number
+        // Find user by phone number - use same error message for both user not found and wrong password
         User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
-        // Check account status
+        // Check if account is temporarily locked due to brute force - MUST check fresh data from DB
+        if (accountLockService.isAccountLocked(user.getId())) {
+            throw new CustomException(ErrorCode.ACCOUNT_TEMPORARILY_LOCKED);
+        }
+
+        // Check account status - use same error message pattern
         if (user.getStatus() == UserStatus.LOCKED) {
             throw new CustomException(ErrorCode.ACCOUNT_LOCKED);
         }
@@ -152,14 +164,29 @@ public class AuthService {
 
         // Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            // Increment failed login attempts using separate transaction
+            accountLockService.incrementFailedAttempts(user.getId());
+
+            // Check if max attempts reached - MUST check fresh data from DB
+            if (accountLockService.isMaxAttemptsReached(user.getId())) {
+                accountLockService.lockAccount(user.getId());
+                log.warn("Account locked due to too many failed login attempts for phone: {}",
+                        request.getPhoneNumber());
+                throw new CustomException(ErrorCode.TOO_MANY_LOGIN_ATTEMPTS);
+            }
+
+            // Use same generic error message - no indication of which field is wrong
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
+
+        // Login successful - reset failed attempts and lock
+        accountLockService.resetFailedAttempts(user.getId());
 
         // Generate tokens
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        // Build user summary
+        // Build user summary - never include passwordHash
         UserSummaryResponse userSummary = UserSummaryResponse.builder()
                 .id(user.getId())
                 .fullName(user.getFullName())
@@ -178,6 +205,33 @@ public class AuthService {
         return response;
     }
 
+    /// Chức năng quên mật khẩu - gửi OTP về điện thoại
+    @Transactional
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, request.getPhoneNumber()));
+
+        String otpCode = generateOtpCode();
+
+        OtpVerification otpVerification = OtpVerification.builder()
+                .phoneNumber(user.getPhoneNumber())
+                .otpCode(otpCode)
+                .purpose(OtpPurpose.FORGOT_PASSWORD)
+                .expiredAt(LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES))
+                .verified(false)
+                .build();
+
+        otpVerificationRepository.save(otpVerification);
+
+        // TODO: thay bằng SMS service thật
+        log.info("FORGOT_PASSWORD OTP for {} is {}", request.getPhoneNumber(), otpCode);
+
+        return ForgotPasswordResponse.builder()
+                .message("Reset OTP has been sent")
+                .phoneNumber(request.getPhoneNumber())
+                .build();
+    }
+    
     private String generateOtpCode() {
         Random random = new Random();
         StringBuilder otp = new StringBuilder();

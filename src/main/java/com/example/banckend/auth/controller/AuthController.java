@@ -1,8 +1,10 @@
 package com.example.banckend.auth.controller;
 
+import com.example.banckend.auth.dto.request.ForgotPasswordRequest;
 import com.example.banckend.auth.dto.request.LoginRequest;
 import com.example.banckend.auth.dto.request.RegisterRequest;
 import com.example.banckend.auth.dto.request.VerifyOtpRequest;
+import com.example.banckend.auth.dto.response.ForgotPasswordResponse;
 import com.example.banckend.auth.dto.response.LoginResponse;
 import com.example.banckend.auth.dto.response.RegisterResponse;
 import com.example.banckend.auth.dto.response.VerifyOtpResponse;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -44,5 +47,18 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(new ApiResponse<>(response));
+    }
+
+    @PostMapping("/forgot-password")
+     public ResponseEntity<ApiResponse<ForgotPasswordResponse>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request
+    ) {
+        ForgotPasswordResponse response = authService.forgotPassword(request);
+        return ResponseEntity.ok(
+                ApiResponse.<ForgotPasswordResponse>builder()
+                        .message("Forgot password request processed successfully")
+                        .data(response)
+                        .build()
+        );
     }
 }
