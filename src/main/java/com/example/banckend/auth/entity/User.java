@@ -53,4 +53,8 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user")
     private NotificationSettings notificationSettings;
+
+    @Column(name = "fcm_token")
+    private String fcmToken;
+    
 }

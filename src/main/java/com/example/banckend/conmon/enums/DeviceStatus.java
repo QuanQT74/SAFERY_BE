@@ -4,5 +4,6 @@ public enum DeviceStatus {
     SAFE,
     WARNING,
     DANGER,
-    OFFLINE
+    OFFLINE,
+    PAIRING
 }
