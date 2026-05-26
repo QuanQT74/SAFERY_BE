@@ -13,10 +13,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RegisterResponse {
+public class SendOtpResponse {
 
     private String message;
     private String phoneNumber;
-    private String fullName;
-    private Boolean phoneVerified;
+    private String otpCode;
 }

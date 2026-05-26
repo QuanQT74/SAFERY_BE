@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class LoginResponse {
+    
     private String accessToken;
 
     private String refreshToken;
@@ -15,4 +16,8 @@ public class LoginResponse {
     private String tokenType;
 
     private UserSummaryResponse user;
+
+    private Long accessTokenExpiresIn;
+
+    private Long refreshTokenExpiresIn;
 }
