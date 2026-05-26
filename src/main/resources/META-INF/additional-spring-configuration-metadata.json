@@ -1,0 +1,62 @@
+{"properties": [
+  {
+    "name": "jwt.access-token-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.access-token-expiration'"
+  },
+  {
+    "name": "jwt.refresh-token-expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.refresh-token-expiration'"
+  },
+  {
+    "name": "device.offline.timeout.minutes",
+    "type": "java.lang.String",
+    "description": "A description for 'device.offline.timeout.minutes'"
+  },
+  {
+    "name": "twilio",
+    "type": "java.lang.String",
+    "description": "A description for 'twilio'"
+  },
+  {
+    "name": "account-sid",
+    "type": "java.lang.String",
+    "description": "A description for 'account-sid'"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "auth-token",
+    "type": "java.lang.String",
+    "description": "A description for 'auth-token'"
+  },
+  {
+    "name": "from-number",
+    "type": "java.lang.String",
+    "description": "A description for 'from-number'"
+  },
+  {
+    "name": "expiry-minutes",
+    "type": "java.lang.String",
+    "description": "A description for 'expiry-minutes'"
+  },
+  {
+    "name": "length",
+    "type": "java.lang.String",
+    "description": "A description for 'length'"
+  },
+  {
+    "name": "app.firebase.config-path",
+    "type": "java.lang.String",
+    "description": "A description for 'app.firebase.config-path'"
+  },
+  {
+    "name": "otp",
+    "type": "java.lang.String",
+    "description": "A description for 'otp'"
+  }
+]}
