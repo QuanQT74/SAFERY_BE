@@ -37,8 +37,16 @@ public class OtpVerification extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean verified = false;
 
-    
+    @Column(length = 100)
+    private String resetToken;
+
+    @Column(length = 100)
+    private String fullName;
+
+    @Column(length = 255)
+    private String passwordHash;
 }
