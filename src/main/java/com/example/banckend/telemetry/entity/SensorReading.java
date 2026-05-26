@@ -13,7 +13,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
 @Getter
 @Setter
 @Entity
@@ -50,7 +49,10 @@ public class SensorReading extends BaseEntity {
     private Boolean fanStatus = false;
 
     @Column(nullable = false)
-    private Boolean autoMode = false;
+    private Boolean alarmArmed = false;
+
+    @Column(nullable = false)
+    private Boolean aiDetectedFire = false;
 
     @Column(nullable = false)
     private LocalDateTime recordedAt;

@@ -29,7 +29,7 @@ public class Alert extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private AlertType type;
+    private AlertType type;  // FIRE, GAS, CO, TEMPERATURE, DISCONNECT, OFFLINE, AI_FIRE
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
