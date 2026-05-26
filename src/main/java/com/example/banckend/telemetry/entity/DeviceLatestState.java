@@ -15,8 +15,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
-
 @Getter
 @Setter
 @Entity
@@ -46,7 +44,17 @@ public class DeviceLatestState extends BaseEntity {
     private Boolean fanStatus = false;
 
     @Column(nullable = false)
-    private Boolean autoMode = false;
+    private Boolean alarmArmed = false;
+
+    @Column(nullable = false)
+    private Boolean aiDetectedFire = false;
+
+    // Trạng thái đang chờ xử lý (để App không bị giật nút)
+    @Column(name = "pending_fan_status")
+    private Boolean pendingFanStatus;
+
+    @Column(name = "pending_alarm_status")
+    private Boolean pendingAlarmStatus;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
