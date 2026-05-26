@@ -42,7 +42,8 @@ public enum ErrorCode {
     ACCOUNT_INACTIVE(10408, HttpStatus.FORBIDDEN, "Account is inactive"),
     PHONE_NOT_VERIFIED(10409, HttpStatus.FORBIDDEN, "Phone number must be verified before login"),
     TOO_MANY_LOGIN_ATTEMPTS(10410, HttpStatus.TOO_MANY_REQUESTS, "Too many login attempts. Please try again later"),
-    ACCOUNT_TEMPORARILY_LOCKED(10411, HttpStatus.FORBIDDEN, "Account is temporarily locked due to too many failed login attempts"),
+    ACCOUNT_TEMPORARILY_LOCKED(10411, HttpStatus.FORBIDDEN,
+            "Account is temporarily locked due to too many failed login attempts"),
 
     // Review-related errors
     REVIEW_NOT_FOUND(10500, HttpStatus.NOT_FOUND, "Review with ID '{}' not found"),
