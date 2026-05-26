@@ -4,6 +4,7 @@ services:
   mysql-db:
     image: mysql:8.0
     container_name: iot-safety-mysql
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: iot_safety_db
@@ -13,6 +14,21 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - iot-safety-network
+
+  backend:
+    image: quandt74959/thinhdt:latest
+    container_name: iot-safety-backend
+    restart: always
+    depends_on:
+      - mysql-db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/iot_safety_db
+      SPRING_DATASOURCE_USERNAME: root_base
+      SPRING_DATASOURCE_PASSWORD: 123456
     networks:
       - iot-safety-network
 
