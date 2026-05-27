@@ -25,10 +25,23 @@ services:
       - mysql-db
     ports:
       - "8080:8080"
+
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/iot_safety_db
       SPRING_DATASOURCE_USERNAME: root_base
       SPRING_DATASOURCE_PASSWORD: 123456
+
+      JWT_SECRET: your-jwt-secret
+
+      FIREBASE_CONFIG_PATH: /app/secrets/firebase-service-account.json
+
+      TWILIO_ACCOUNT_SID:
+      TWILIO_AUTH_TOKEN:
+      TWILIO_FROM_NUMBER:
+
+    volumes:
+      - ./secrets/firebase-service-account.json:/app/secrets/firebase-service-account.json:ro
+
     networks:
       - iot-safety-network
 
