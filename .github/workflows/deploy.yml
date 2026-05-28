@@ -23,7 +23,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build & run tests
+      - name: Build & run tests 
         run: mvn -B clean verify --file pom.xml
 
   build-and-push-docker:
@@ -65,7 +65,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push-docker
-    if: github.ref_name == 'main'   # ← chỉ deploy khi push lên main
+    if: github.ref_name == 'master'   # ← chỉ deploy khi push lên master
     steps:
       - name: SSH vào VPS và deploy
         uses: appleboy/ssh-action@v1
