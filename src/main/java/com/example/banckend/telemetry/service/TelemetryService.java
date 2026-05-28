@@ -192,7 +192,8 @@ public class TelemetryService {
         // WARNING: gas>500 OR co>20 OR temperature>40
         boolean isWarning = request.getGasValue() > 500
                 || request.getCoValue() > 20
-                || request.getTemperature() > 40;
+                || request.getTemperature() > 40
+                || request.getHumidity() > 80;
 
         if (isWarning) {
             return DeviceStatus.WARNING;

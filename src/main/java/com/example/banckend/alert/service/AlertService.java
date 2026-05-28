@@ -4,6 +4,7 @@ import com.example.banckend.alert.dto.response.AlertResponse;
 import com.example.banckend.alert.entity.Alert;
 import com.example.banckend.alert.mapper.AlertMapper;
 import com.example.banckend.alert.repository.AlertRepository;
+import com.example.banckend.auth.repository.RefreshTokenRepository;
 import com.example.banckend.auth.repository.UserRepository;
 import com.example.banckend.conmon.enums.AlertSeverity;
 import com.example.banckend.conmon.enums.AlertStatus;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +33,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AlertService {
 
+    private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final AlertRepository alertRepository;
     private final AlertMapper alertMapper;
@@ -41,7 +42,7 @@ public class AlertService {
 
     @Transactional
     public List<AlertResponse> createAlertIfNeeded(Device device, TelemetryRequest request, DeviceStatus status) {
-        if (status != DeviceStatus.DANGER || device.getOwnerUserId() == null) {
+        if (status == DeviceStatus.SAFE || device.getOwnerUserId() == null) {
             return List.of();
         }
 
@@ -62,7 +63,7 @@ public class AlertService {
                         null, null));
             }
         }
-
+        ///GAS
         if (request.getGasValue() != null && request.getGasValue() > 1000) {
             if (shouldCreateAlert(device.getId(), AlertType.GAS)) {
                 newAlerts.add(createAlertEntity(device, AlertType.GAS, AlertSeverity.CRITICAL,
@@ -70,7 +71,14 @@ public class AlertService {
                         request.getGasValue(), "ppm"));
             }
         }
-
+        if(request.getGasValue() != null && request.getGasValue() > 500 && request.getGasValue() <= 1000){
+            if (shouldCreateAlert(device.getId(), AlertType.GAS)) {
+                newAlerts.add(createAlertEntity(device, AlertType.GAS, AlertSeverity.WARNING,
+                        "Nồng độ gas cao", "Nồng độ gas vượt ngưỡng: " + request.getGasValue() + " ppm",
+                        request.getGasValue(), "ppm"));
+            }
+        }
+            ///CO
         if (request.getCoValue() != null && request.getCoValue() > 50) {
             if (shouldCreateAlert(device.getId(), AlertType.CO)) {
                 newAlerts.add(createAlertEntity(device, AlertType.CO, AlertSeverity.CRITICAL,
@@ -78,7 +86,15 @@ public class AlertService {
                         request.getCoValue(), "ppm"));
             }
         }
+        if(request.getCoValue() != null && request.getCoValue() > 20 && request.getCoValue() <= 50){
+            if (shouldCreateAlert(device.getId(), AlertType.CO)) {
+                newAlerts.add(createAlertEntity(device, AlertType.CO, AlertSeverity.WARNING,
+                        "Nồng độ CO cao", "Nồng độ CO vượt ngưỡng: " + request.getCoValue() + " ppm",
+                        request.getCoValue(), "ppm"));
+            }
+        }
 
+         /// Nhiet do 
         if (request.getTemperature() != null && request.getTemperature() > 50) {
             if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE)) {
                 newAlerts.add(createAlertEntity(device, AlertType.TEMPERATURE, AlertSeverity.CRITICAL,
@@ -86,8 +102,22 @@ public class AlertService {
                         request.getTemperature(), "°C"));
             }
         }
-
+        if(request.getTemperature() != null && request.getTemperature() > 35 && request.getTemperature() <= 50){
+            if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE)) {
+                newAlerts.add(createAlertEntity(device, AlertType.TEMPERATURE, AlertSeverity.WARNING,
+                        "Nhiệt độ cao", "Nhiệt độ vượt ngưỡng: " + request.getTemperature() + "°C",
+                        request.getTemperature(), "°C"));
+            }
+        }
+        // Do am 
         if (request.getHumidity() != null && request.getHumidity() > 80) {
+            if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY)) {
+                newAlerts.add(createAlertEntity(device, AlertType.HUMIDITY, AlertSeverity.WARNING,
+                        "Độ ẩm cao", "Độ ẩm vượt ngưỡng: " + request.getHumidity() + "%",
+                        request.getHumidity(), "%"));
+            }
+        }
+        if(request.getHumidity() != null && request.getHumidity() > 60 && request.getHumidity() <= 80){
             if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY)) {
                 newAlerts.add(createAlertEntity(device, AlertType.HUMIDITY, AlertSeverity.WARNING,
                         "Độ ẩm cao", "Độ ẩm vượt ngưỡng: " + request.getHumidity() + "%",
