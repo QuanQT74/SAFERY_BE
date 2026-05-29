@@ -5,7 +5,7 @@ import java.io.InputStream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 
 import org.springframework.beans.factory.annotation.Value;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -21,7 +21,7 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseMessaging firebaseMessagingZ() throws IOException{
-        ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
+        FileSystemResource resource = new FileSystemResource(firebaseConfigPath);
 
         InputStream serviceAccount = resource.getInputStream();
         FirebaseOptions options = new FirebaseOptions.Builder()
