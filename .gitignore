@@ -38,3 +38,4 @@ build/
 ### Secrets ###
 .env
 secrets/
+src/main/resources/firebase-service-account.json
