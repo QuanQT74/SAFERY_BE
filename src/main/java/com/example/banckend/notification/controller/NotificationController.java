@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.banckend.auth.entity.User;
 import com.example.banckend.auth.repository.UserRepository;
+import com.example.banckend.auth.service.FcmTokenService;
 import com.example.banckend.conmon.exception.CustomException;
 import com.example.banckend.conmon.exception.ErrorCode;
 import com.example.banckend.conmon.response.ApiResponse;
@@ -30,47 +31,30 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @Tag(name = "Notifications", description = "APIs for push notifications and FCM token management")
 public class NotificationController {
 
+    private final FcmTokenService fcmTokenService;
     private final UserRepository userRepository;
     private final NotificationPushService notificationPushService;
+    // ...
 
-    // ==================== FCM TOKEN MANAGEMENT ====================
-
-    /**
-     * iOS/Android gọi sau khi login thành công hoặc khi FCM token refresh.
-     * Lưu FCM token vào DB để server có thể push notification qua Firebase.
-     *
-     * POST /api/notifications/token
-     * Header: Authorization: Bearer <accessToken>
-     * Body: { "fcmToken": "..." }
-     */
     @PostMapping("/token")
     public ResponseEntity<ApiResponse<Void>> updateFcmToken(@Valid @RequestBody FcmTokenRequest request) {
         Long userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, userId.toString()));
 
-        user.setFcmToken(request.getFcmToken());
-        userRepository.save(user);
+        fcmTokenService.registerToken(user, request.getFcmToken() ,null);;
 
-        log.info("[FCM] Updated FCM token for userId={}", userId);
+        log.info("[FCM] Registered FCM token for userId={}", userId);
         return ResponseEntity.ok(ApiResponse.success("FCM token updated successfully", null));
     }
 
-    /**
-     * iOS/Android gọi khi user logout.
-     * Xóa FCM token để user không nhận push notification nữa.
-     *
-     * DELETE /api/notifications/token
-     * Header: Authorization: Bearer <accessToken>
-     */
     @DeleteMapping("/token")
-    public ResponseEntity<ApiResponse<Void>> removeFcmToken() {
+    public ResponseEntity<ApiResponse<Void>> removeFcmToken(@Valid @RequestBody FcmTokenRequest request) {
         Long userId = getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND, userId.toString()));
 
-        user.setFcmToken(null);
-        userRepository.save(user);
+        fcmTokenService.removeToken(user, request.getFcmToken());
 
         log.info("[FCM] Removed FCM token for userId={}", userId);
         return ResponseEntity.ok(ApiResponse.success("FCM token removed successfully", null));

@@ -49,7 +49,7 @@ public class AlertService {
         List<Alert> newAlerts = new ArrayList<>();
 
         if (Boolean.TRUE.equals(request.getFlameDetected())) {
-            if (shouldCreateAlert(device.getId(), AlertType.FLAME)) {
+            if (shouldCreateAlert(device.getId(), AlertType.FLAME, AlertSeverity.CRITICAL)) {
                 newAlerts.add(createAlertEntity(device, AlertType.FLAME, AlertSeverity.CRITICAL,
                         "Phát hiện lửa", "Phát hiện lửa tại thiết bị " + device.getDeviceName(),
                         null, null));
@@ -57,7 +57,7 @@ public class AlertService {
         }
 
         if (Boolean.TRUE.equals(request.getAiDetectedFire())) {
-            if (shouldCreateAlert(device.getId(), AlertType.AI_FIRE)) {
+            if (shouldCreateAlert(device.getId(), AlertType.AI_FIRE, AlertSeverity.CRITICAL)) {
                 newAlerts.add(createAlertEntity(device, AlertType.AI_FIRE, AlertSeverity.CRITICAL,
                         "AI phát hiện cháy", "AI phát hiện cháy tại thiết bị " + device.getDeviceName(),
                         null, null));
@@ -65,14 +65,14 @@ public class AlertService {
         }
         ///GAS
         if (request.getGasValue() != null && request.getGasValue() > 1000) {
-            if (shouldCreateAlert(device.getId(), AlertType.GAS)) {
+            if (shouldCreateAlert(device.getId(), AlertType.GAS, AlertSeverity.CRITICAL)) {
                 newAlerts.add(createAlertEntity(device, AlertType.GAS, AlertSeverity.CRITICAL,
                         "Nồng độ gas cao", "Nồng độ gas vượt ngưỡng nguy hiểm: " + request.getGasValue() + " ppm",
                         request.getGasValue(), "ppm"));
             }
         }
         if(request.getGasValue() != null && request.getGasValue() > 500 && request.getGasValue() <= 1000){
-            if (shouldCreateAlert(device.getId(), AlertType.GAS)) {
+            if (shouldCreateAlert(device.getId(), AlertType.GAS, AlertSeverity.WARNING)) {
                 newAlerts.add(createAlertEntity(device, AlertType.GAS, AlertSeverity.WARNING,
                         "Nồng độ gas cao", "Nồng độ gas vượt ngưỡng: " + request.getGasValue() + " ppm",
                         request.getGasValue(), "ppm"));
@@ -80,14 +80,14 @@ public class AlertService {
         }
             ///CO
         if (request.getCoValue() != null && request.getCoValue() > 50) {
-            if (shouldCreateAlert(device.getId(), AlertType.CO)) {
+            if (shouldCreateAlert(device.getId(), AlertType.CO, AlertSeverity.CRITICAL)) {
                 newAlerts.add(createAlertEntity(device, AlertType.CO, AlertSeverity.CRITICAL,
                         "Nồng độ CO cao", "Nồng độ CO vượt ngưỡng nguy hiểm: " + request.getCoValue() + " ppm",
                         request.getCoValue(), "ppm"));
             }
         }
         if(request.getCoValue() != null && request.getCoValue() > 20 && request.getCoValue() <= 50){
-            if (shouldCreateAlert(device.getId(), AlertType.CO)) {
+            if (shouldCreateAlert(device.getId(), AlertType.CO, AlertSeverity.WARNING)) {
                 newAlerts.add(createAlertEntity(device, AlertType.CO, AlertSeverity.WARNING,
                         "Nồng độ CO cao", "Nồng độ CO vượt ngưỡng: " + request.getCoValue() + " ppm",
                         request.getCoValue(), "ppm"));
@@ -96,14 +96,14 @@ public class AlertService {
 
          /// Nhiet do 
         if (request.getTemperature() != null && request.getTemperature() > 50) {
-            if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE)) {
+            if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE, AlertSeverity.CRITICAL)) {
                 newAlerts.add(createAlertEntity(device, AlertType.TEMPERATURE, AlertSeverity.CRITICAL,
                         "Nhiệt độ cao", "Nhiệt độ vượt ngưỡng nguy hiểm: " + request.getTemperature() + "°C",
                         request.getTemperature(), "°C"));
             }
         }
         if(request.getTemperature() != null && request.getTemperature() > 35 && request.getTemperature() <= 50){
-            if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE)) {
+            if (shouldCreateAlert(device.getId(), AlertType.TEMPERATURE, AlertSeverity.WARNING)) {
                 newAlerts.add(createAlertEntity(device, AlertType.TEMPERATURE, AlertSeverity.WARNING,
                         "Nhiệt độ cao", "Nhiệt độ vượt ngưỡng: " + request.getTemperature() + "°C",
                         request.getTemperature(), "°C"));
@@ -111,14 +111,14 @@ public class AlertService {
         }
         // Do am 
         if (request.getHumidity() != null && request.getHumidity() > 80) {
-            if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY)) {
+            if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY, AlertSeverity.WARNING)) {
                 newAlerts.add(createAlertEntity(device, AlertType.HUMIDITY, AlertSeverity.WARNING,
                         "Độ ẩm cao", "Độ ẩm vượt ngưỡng: " + request.getHumidity() + "%",
                         request.getHumidity(), "%"));
             }
         }
         if(request.getHumidity() != null && request.getHumidity() > 60 && request.getHumidity() <= 80){
-            if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY)) {
+            if (shouldCreateAlert(device.getId(), AlertType.HUMIDITY, AlertSeverity.WARNING)) {
                 newAlerts.add(createAlertEntity(device, AlertType.HUMIDITY, AlertSeverity.WARNING,
                         "Độ ẩm cao", "Độ ẩm vượt ngưỡng: " + request.getHumidity() + "%",
                         request.getHumidity(), "%"));
@@ -152,7 +152,7 @@ public class AlertService {
 
     @Transactional
     public AlertResponse createOfflineAlert(Device device) {
-        if (shouldCreateAlert(device.getId(), AlertType.OFFLINE)) {
+        if (shouldCreateAlert(device.getId(), AlertType.OFFLINE, AlertSeverity.WARNING)) {
             return null;
         }
         Alert alert = createAlertEntity(device, AlertType.OFFLINE, AlertSeverity.WARNING,
@@ -177,9 +177,13 @@ public class AlertService {
         return response;
     }
 
-    private boolean shouldCreateAlert(Long deviceId, AlertType type) {
+    private boolean shouldCreateAlert(Long deviceId, AlertType type, AlertSeverity severity) {
+        // WARNING: chờ 3 phút trước khi đẩy lại
+        // CRITICAL: chờ 2 phút trước khi đẩy lại
+        long delayMinutes = (severity == AlertSeverity.WARNING) ? 3 : 2;
+
         return alertRepository.findFirstByDeviceIdAndTypeAndAcknowledgedFalseOrderByCreatedAtEventDesc(deviceId, type)
-                .map(alert -> alert.getCreatedAtEvent().isBefore(LocalDateTime.now().minusMinutes(2)))
+                .map(alert -> alert.getCreatedAtEvent().isBefore(LocalDateTime.now().minusMinutes(delayMinutes)))
                 .orElse(true);
     }
 
