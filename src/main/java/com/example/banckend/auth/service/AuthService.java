@@ -50,6 +50,7 @@ public class AuthService {
     private final AccountLockService accountLockService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenService refreshTokenService;
+    private final FcmTokenService fcmTokenService;
 
     private static final int OTP_LENGTH = 6;
     private static final int OTP_VALIDITY_MINUTES = 5;
@@ -201,8 +202,6 @@ public class AuthService {
 
         accountLockService.resetFailedAttempts(user.getId());
 
-        refreshTokenService.revokeAllRefreshTokensOfUser(user);
-
         String accessToken = jwtService.generateAccessToken(user);
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
@@ -237,12 +236,11 @@ public class AuthService {
         refreshToken.setRevoked(true);
         refreshTokenRepository.save(refreshToken);
 
-        // Xóa FCM token khi logout → user không nhận push notification nữa
+        // Xóa tất cả FCM token của user này khi logout
         User user = refreshToken.getUser();
-        if (user != null && user.getFcmToken() != null) {
-            user.setFcmToken(null);
-            userRepository.save(user);
-            log.info("[LOGOUT] Cleared FCM token for userId={}", user.getId());
+        if (user != null) {
+            fcmTokenService.removeAllTokensForUser(user.getId());
+            log.info("[LOGOUT] Cleared all FCM tokens for userId={}", user.getId());
         }
     }
 
