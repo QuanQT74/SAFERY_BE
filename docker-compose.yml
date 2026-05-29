@@ -32,19 +32,33 @@ services:
       SPRING_DATASOURCE_USERNAME: root_base
       SPRING_DATASOURCE_PASSWORD: 123456
 
-      JWT_SECRET: ${JWT_SECRET:change-me-in-production}
+      JWT_SECRET: ${JWT_SECRET:-abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz12}
 
       FIREBASE_CONFIG_PATH: /app/secrets/firebase-service-account.json
 
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
-      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-your-twilio-account-sid}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-your-twilio-auth-token}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-your-twilio-phone-number}
 
     volumes:
       - ./secrets/firebase-service-account.json:/app/secrets/firebase-service-account.json:ro
 
     networks:
       - iot-safety-network
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    environment:
+      DOCKER_API_VERSION: "1.46"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 300
+      WATCHTOWER_INCLUDE_RESTARTING: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - iot-safety-network
+
 volumes:
   mysql_data:
 
